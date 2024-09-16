@@ -17,9 +17,15 @@ def send_to_chatgpt(text):
         'model': 'gpt-3.5-turbo',
         'messages': [{'role': 'user', 'content': text}]
     }
-    response = requests.post(CHATGPT_API_URL, headers=headers, json=data)
-    response_data = response.json()
-    return response_data['choices'][0]['message']['content']
+    try:
+        response = requests.post(CHATGPT_API_URL, headers=headers, json=data)
+        response.raise_for_status()  # Kiểm tra lỗi HTTP
+        response_data = response.json()
+        return response_data['choices'][0]['message']['content']
+    except Exception as e:
+        print(f"Lỗi khi gửi yêu cầu đến ChatGPT: {e}")
+        return "Xin lỗi, có lỗi xảy ra khi xử lý yêu cầu."
+
 
 
 @app.route('/webhook', methods=['POST'])
@@ -29,7 +35,13 @@ def webhook():
     text = data['message']['text']
 
     reply = send_to_chatgpt(text)
-    requests.post(f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage', json={'chat_id': chat_id, 'text': reply})
+
+    try:
+        response = requests.post(f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage',
+                                 json={'chat_id': chat_id, 'text': reply})
+        response.raise_for_status()
+    except Exception as e:
+        print(f"Lỗi khi gửi tin nhắn đến Telegram: {e}")
 
     return '', 200
 
