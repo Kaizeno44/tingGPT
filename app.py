@@ -4,7 +4,7 @@ import requests
 app = Flask(__name__)
 
 TELEGRAM_TOKEN = ''
-CHATGPT_API_URL = ''
+CHATGPT_API_URL = 'https://chatgpt.com/g/g-wgVqHPalp-tinggpt'
 CHATGPT_API_KEY = ''
 
 
