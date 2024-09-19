@@ -31,17 +31,23 @@ def send_to_chatgpt(text):
 @app.route('/webhook', methods=['POST'])
 def webhook():
     data = request.get_json()
-    chat_id = data['message']['chat']['id']
-    text = data['message']['text']
+    chat_id = data.get('message', {}).get('chat', {}).get('id')
+    text = data.get('message', {}).get('text')
 
-    reply = send_to_chatgpt(text)
+    if chat_id and text:
+        reply = send_to_chatgpt(text)
 
-    try:
-        response = requests.post(f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage',
-                                 json={'chat_id': chat_id, 'text': reply})
-        response.raise_for_status()
-    except Exception as e:
-        print(f"Lỗi khi gửi tin nhắn đến Telegram: {e}")
+        try:
+            response = requests.post(
+                f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage',
+                json={'chat_id': chat_id, 'text': reply}
+            )
+            response.raise_for_status()  # Kiểm tra nếu có lỗi HTTP
+        except requests.exceptions.RequestException as e:
+            print(f"Lỗi khi gửi tin nhắn đến Telegram: {e}")
+            return f"Lỗi khi gửi tin nhắn: {e}", 500
+    else:
+        return "Dữ liệu không hợp lệ", 400
 
     return '', 200
 
